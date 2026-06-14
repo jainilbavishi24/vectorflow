@@ -117,8 +117,8 @@ From the data modeling perspective, we propose **fine-grained trajectory tokeniz
 
 ### Fundamental setup
 ```
-conda create -n flow_planner python=3.9
-conda activate flow_planner
+conda create -n vectorflow python=3.9
+conda activate vectorflow
 ```
 ### install nuplan-devkit
 ```
@@ -127,11 +127,11 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
-### flow planner setup
+### vectorflow setup
 
 ```
 cd ..
-git clone https://github.com/DiffusionAD/Flow-Planner.git && cd Flow-Planner
+git clone https://github.com/jainilbavishi24/Flow-Planner.git && cd Flow-Planner
 pip install -e .
 pip install -r requirements.txt
 ```
@@ -139,12 +139,20 @@ pip install -r requirements.txt
 ### To Launch Training
 
 1. Convert nuplan data into npz and generate corresponding data list json file as indicated in https://github.com/ZhengYinan-AIR/Diffusion-Planner.
-2. Fill in the `flow_planner.script.data.dataset.nuplan_data.yaml` with generated file path.
-3. Launch training with `flow_planner/run_script/launch_train.sh`
+2. Fill in the `vectorflow.script.data.dataset.nuplan_data.yaml` with generated file path.
+3. Launch training with `vectorflow/run_script/launch_train.sh`
+
+### Preflight (1-batch) check
+
+Run a quick sanity check before epoch 1. If `TRAINING_DATA` and `TRAINING_JSON` are not set, the script generates a tiny synthetic dataset under `tmp/vectorflow_synth`.
+
+```
+python vectorflow/tools/preflight_shapes.py
+```
 
 ### To Launch Simulation
 
-1. Fill the `flow_planner/run_script/launch_sim_nuplan.sh` with corresponding path and task.
+1. Fill the `vectorflow/run_script/launch_sim_nuplan.sh` with corresponding path and task.
 2. To perform interPlan simulation, follow the instructions in https://github.com/mh0797/interPlan
 
 ## Bibtex

@@ -1,0 +1,1 @@
+from vectorflow.data.utils.collect import collect_batch

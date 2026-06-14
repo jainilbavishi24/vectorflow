@@ -1,0 +1,2 @@
+_target_: vectorflow.data.normalization.obs_normalize.ObservationNormalizer
+config: ${normalization_stats}

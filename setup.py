@@ -8,10 +8,10 @@ os.chdir(script_folder)
 
 # Installs
 setuptools.setup(
-    name="flow_planner",
+    name="vectorflow",
     version="1.0.0",
     author="Tianyi Tan, Zheng Yinan, Ruiming Liang, Kexin Zheng @ Tsinghua AIR",
-    packages=["flow_planner"],
+    packages=setuptools.find_packages(),
     package_dir={"": "."},
     classifiers=[
         "Programming Language :: Python :: 3.9",

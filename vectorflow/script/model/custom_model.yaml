@@ -1,0 +1,86 @@
+# Custom model config — uses VectorFlowPlanner's training/inference orchestration
+# with stub encoder/decoder that your mentor will replace with the real DiT.
+#
+# To train with this model:
+#   Change the model default in vectorflow_standard.yaml to "model: custom_model"
+#   or pass it on the CLI: python trainer.py ... model=custom_model
+
+_target_: vectorflow.model.vectorflow_model.flow_planner.VectorFlowPlanner
+
+# ── scene input dimensions (do not change — matches data pipeline) ──
+neighbor_num: 32
+neighbor_pred_num: 0
+static_num: 5
+lane_num: 70
+
+# ── classifier-free guidance ──
+cfg_neighbor_num: 10
+cfg_prob: 0.3
+cfg_weight: 1.8
+cfg_type: neighbors       # drop 'neighbors' or 'lanes' for unconditional branch
+
+# ── trajectory representation ──
+future_len: 80            # 8 seconds @ 10 Hz
+action_len: 20            # each chunk = 2 seconds
+action_overlap: 10        # overlap between consecutive chunks → action_num = 7
+state_dim: 4              # (x, y, cos_heading, sin_heading)
+model_type: x_start       # flow matching prediction target: 'x_start' | 'velocity' | 'noise'
+
+assemble_method: average  # how overlapping chunks are merged at inference: 'average' | 'linear'
+
+# ── flow ODE (unchanged from VectorFlow) ──
+flow_ode:
+  _target_: vectorflow.model.vectorflow_model.flow_utils.flow_ode.FlowODE
+  path:
+    _target_: flow_matching.path.affine.AffineProbPath
+    scheduler:
+      _target_: flow_matching.path.scheduler.CondOTScheduler
+  time_sampler:
+    _target_: vectorflow.model.model_utils.time_sampler.TimeSampler
+    sample_method: uniform
+    device: ${device}
+    eps: 1e-3
+    alpha: 1.0
+    beta: 1.5
+  cfg_weight: ${..cfg_weight}
+  sample_steps: 4
+  sample_method: midpoint
+  sample_temperature: 1.0
+
+# ── normalization (unchanged from VectorFlow) ──
+obs_normalizer:
+  _target_: vectorflow.data.normalization.obs_normalize.ObservationNormalizer
+  config: ${normalization_stats}
+state_normalizer:
+  _target_: vectorflow.data.normalization.state_normalize.StateNormalizer
+  config: ${normalization_stats}
+  future_downsampling_method: ${data.dataset.train.future_downsampling_method}
+  predicted_neighbor_num: ${data.dataset.train.predicted_neighbor_num}
+
+data_processor:
+  _target_: vectorflow.model.model_utils.input_preprocess.ModelInputProcessor
+  future_len: ${..future_len}
+  obs_normalizer: ${..obs_normalizer}
+  state_normalizer: ${..state_normalizer}
+  neighbor_pred_num: ${..neighbor_pred_num}
+
+# ── stub encoder (replace _target_ and params with real encoder) ──
+model_encoder:
+  _target_: vectorflow.model.custom_model.encoder.CustomEncoder
+  encoder_hidden_dim: 192
+  neighbor_num: ${..neighbor_num}
+  static_num: ${..static_num}
+  lane_num: ${..lane_num}
+
+# ── stub decoder (replace _target_ and params with real DiT) ──
+model_decoder:
+  _target_: vectorflow.model.custom_model.decoder.CustomDecoder
+  action_len: ${..action_len}
+  state_dim: ${..state_dim}
+  # extra params forwarded to **kwargs — add whatever the real DiT needs:
+  encoder_hidden_dim: ${..model_encoder.encoder_hidden_dim}
+  neighbor_num: ${..neighbor_num}
+  static_num: ${..static_num}
+  lane_num: ${..lane_num}
+  future_len: ${..future_len}
+  action_overlap: ${..action_overlap}
